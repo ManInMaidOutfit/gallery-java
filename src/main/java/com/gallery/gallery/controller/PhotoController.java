@@ -139,14 +139,15 @@ public String updatePhoto(@PathVariable Integer id,
     }
 
     @GetMapping("/image/{id}")
-    public ResponseEntity<String> getPhotoImageUrl(@PathVariable Integer id) 
+    public ResponseEntity<?> getPhotoImageUrl(@PathVariable Integer id) 
     {
         Photo photo = photoRepository.findById(id).orElse(null);
         if (photo == null) 
         {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(photo.getFilePath());
+        // Перенаправляем на реальный URL изображения в ImgBB
+        return ResponseEntity.status(302).header("Location", photo.getFilePath()).build();
     }
 
 @PostMapping("/{id}/view")
