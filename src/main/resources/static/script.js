@@ -66,16 +66,16 @@ async function loadCategories() {
 
 // Получение названия категории по ID
 async function getCategoryTitle(categoryId) {
-    if (!categoryId) return 'Без категории';
+    if (!categoryId) return 'По умолчанию';
     try {
         const response = await fetch(`${API_BASE}/categories/${categoryId}`);
         if (response.ok) {
             const category = await response.json();
             return category.title;
         }
-        return 'Без категории';
+        return 'По умолчанию';
     } catch (error) {
-        return 'Без категории';
+        return 'По умолчанию';
     }
 }
 
@@ -181,7 +181,7 @@ function renderGallery(photos) {
             card.classList.add("invisible-photo");
         }
         
-        const categoryTitle = photo.categoryTitle || 'Без категории';
+        const categoryTitle = photo.categoryTitle || 'По умолчанию';
         
         card.innerHTML = `
             <img src="${API_BASE}/photos/image/${photo.id}" alt="${escapeHtml(photo.title)}" data-id="${photo.id}" data-index="${idx}" loading="lazy">
