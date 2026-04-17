@@ -37,23 +37,28 @@ public class PhotoController
 
 
     @GetMapping
-    
     public Page<Photo> getAllPhotos(
         @PageableDefault(size = 20, sort = "uploadDate", direction = Sort.Direction.DESC) Pageable pageable, 
-        @RequestParam(required = false) List<Integer> categoryIds,
-        @RequestParam(required = false) String categoryId,  // ← Добавьте это
+        @RequestParam(required = false) String categoryIds,  // ← ИЗМЕНИЛИ на String
         @RequestParam(required = false) LocalDate dateFrom,
         @RequestParam(required = false) LocalDate dateTo,
         @RequestParam(required = false) String search)
     {
-        // Если categoryIds пустой, но categoryId есть
-        if ((categoryIds == null || categoryIds.isEmpty()) && categoryId != null && !categoryId.isEmpty()) {
-            categoryIds = List.of(Integer.parseInt(categoryId));
+        List<Integer> categoryIdList = null;
+        
+        // Преобразуем строку в список
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            try {
+                categoryIdList = List.of(Integer.parseInt(categoryIds));
+                System.out.println("Category filter: " + categoryIdList);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid category ID: " + categoryIds);
+            }
         }
         
-        if (categoryIds != null || dateFrom != null || dateTo != null || search != null) 
+        if (categoryIdList != null || dateFrom != null || dateTo != null || search != null) 
         {
-            return photoRepository.findWithFilters(categoryIds, dateFrom, dateTo, search, pageable);
+            return photoRepository.findWithFilters(categoryIdList, dateFrom, dateTo, search, pageable);
         }
         return photoRepository.findAll(pageable);
     }
