@@ -36,6 +36,7 @@ public class SecurityConfig
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                     
                     // GET запросы к категориям и фото - всем можно
+                    .requestMatchers(HttpMethod.GET, "/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/categories").permitAll()
                     .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/photos").permitAll()
