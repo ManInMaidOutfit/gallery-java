@@ -181,6 +181,7 @@ function renderGallery(photos) {
         
         card.innerHTML = `
             <img src="${API_BASE}/photos/image/${photo.id}" alt="${escapeHtml(photo.title)}" data-id="${photo.id}" data-index="${idx}" loading="lazy">
+            console.log("Фото:", photo.id, photo.title);
             <div class="photo-info">
                 <div class="photo-title-wrapper">
                     <div class="photo-title">
