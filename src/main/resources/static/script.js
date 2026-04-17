@@ -85,9 +85,13 @@ async function loadPhotos() {
     const search = document.getElementById("searchInput")?.value || "";
     const category = document.getElementById("categoryFilter")?.value || "";
     
-    let url = `${API_BASE}/photos?page=${currentPage}&size=${PAGE_SIZE}`;
+    let url;
+    if (category) {
+        url = `${API_BASE}/photos/by-category/${category}?page=${currentPage}&size=${PAGE_SIZE}`;
+    } else {
+        url = `${API_BASE}/photos?page=${currentPage}&size=${PAGE_SIZE}`;
+    }
     if (search) url += `&search=${encodeURIComponent(search)}`;
-    if (category) url += `&categoryIds=${category}`;
     
     try {
         const response = await fetch(url);

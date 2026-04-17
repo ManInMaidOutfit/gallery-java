@@ -17,15 +17,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface PhotoRepository extends JpaRepository<Photo, Integer> 
 {
-    @Query("SELECT p FROM Photo p WHERE " +
+        @Query("SELECT p FROM Photo p WHERE " +
        "(:categoryIds IS NULL OR p.categoryId IN :categoryIds) AND " +
        "(:dateFrom IS NULL OR p.uploadDate >= :dateFrom) AND " +
        "(:dateTo IS NULL OR p.uploadDate <= :dateTo) AND " +
-       "(:search IS NULL OR p.title LIKE CONCAT('%', :search, '%'))")
+       "(:search IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')))")
         Page<Photo> findWithFilters(@Param ("categoryIds") List<Integer> categoryIds, @Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo,@Param("search") String search, Pageable pageable);
 
         @Modifying
     @Transactional
     @Query("UPDATE Photo p SET p.categoryId = 1 WHERE p.categoryId = :categoryId")
     void movePhotosToDefaultCategory(@Param("categoryId") Integer categoryId);
+    Page<Photo> findByCategoryId(Integer categoryId, Pageable pageable);
 }

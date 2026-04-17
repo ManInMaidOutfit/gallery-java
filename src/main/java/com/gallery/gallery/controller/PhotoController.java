@@ -34,34 +34,24 @@ public class PhotoController
     @Autowired
     private ImgbbService imgbbService;
 
-
-
+    // ВРЕМЕННЫЙ ПРОСТОЙ ЭНДПОИНТ - ТОЛЬКО ВСЕ ФОТО
     @GetMapping
     public Page<Photo> getAllPhotos(
-        @PageableDefault(size = 20, sort = "uploadDate", direction = Sort.Direction.DESC) Pageable pageable, 
-        @RequestParam(required = false) String categoryIds,  // ← ИЗМЕНИЛИ на String
-        @RequestParam(required = false) LocalDate dateFrom,
-        @RequestParam(required = false) LocalDate dateTo,
-        @RequestParam(required = false) String search)
+        @PageableDefault(size = 20, sort = "uploadDate", direction = Sort.Direction.DESC) Pageable pageable)
     {
-        List<Integer> categoryIdList = null;
-        
-        // Преобразуем строку в список
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            try {
-                categoryIdList = List.of(Integer.parseInt(categoryIds));
-                System.out.println("Category filter: " + categoryIdList);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid category ID: " + categoryIds);
-            }
-        }
-        
-        if (categoryIdList != null || dateFrom != null || dateTo != null || search != null) 
-        {
-            return photoRepository.findWithFilters(categoryIdList, dateFrom, dateTo, search, pageable);
-        }
+        // Временно возвращаем все фото без фильтров
         return photoRepository.findAll(pageable);
     }
+
+    // НОВЫЙ ПРОСТОЙ ЭНДПОИНТ ДЛЯ ФИЛЬТРАЦИИ ПО КАТЕГОРИИ
+    @GetMapping("/by-category/{categoryId}")
+public ResponseEntity<Page<Photo>> getPhotosByCategory(
+        @PathVariable Integer categoryId,
+        @PageableDefault(size = 20, sort = "uploadDate", direction = Sort.Direction.DESC) Pageable pageable) 
+{
+    Page<Photo> photos = photoRepository.findByCategoryId(categoryId, pageable);
+    return ResponseEntity.ok(photos);
+}
 
     @GetMapping("/")
     public String redirectToIndex() 
@@ -164,30 +154,29 @@ public String updatePhoto(@PathVariable Integer id,
         return ResponseEntity.status(302).header("Location", photo.getFilePath()).build();
     }
 
-@PostMapping("/{id}/view")
-public ResponseEntity<?> incrementViews(@PathVariable Integer id) {
-    Photo photo = photoRepository.findById(id).orElse(null);
-    if (photo == null) {
-        return ResponseEntity.notFound().build();
+    @PostMapping("/{id}/view")
+    public ResponseEntity<?> incrementViews(@PathVariable Integer id) {
+        Photo photo = photoRepository.findById(id).orElse(null);
+        if (photo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        photo.setViews(photo.getViews() + 1);
+        photoRepository.save(photo);
+        return ResponseEntity.ok().build();
     }
-    photo.setViews(photo.getViews() + 1);
-    photoRepository.save(photo);
-    return ResponseEntity.ok().build();
-}
 
-@GetMapping("/debug")
-public ResponseEntity<Map<String, Object>> debug() {
-    Map<String, Object> info = new HashMap<>();
-    try {
-        long count = photoRepository.count();
-        info.put("totalPhotos", count);
-        info.put("status", "OK");
-        return ResponseEntity.ok(info);
-    } catch (Exception e) {
-        info.put("status", "ERROR");
-        info.put("error", e.getMessage());
-        return ResponseEntity.status(500).body(info);
+    @GetMapping("/debug")
+    public ResponseEntity<Map<String, Object>> debug() {
+        Map<String, Object> info = new HashMap<>();
+        try {
+            long count = photoRepository.count();
+            info.put("totalPhotos", count);
+            info.put("status", "OK");
+            return ResponseEntity.ok(info);
+        } catch (Exception e) {
+            info.put("status", "ERROR");
+            info.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(info);
+        }
     }
-}
-
 }
