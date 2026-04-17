@@ -29,7 +29,7 @@ public class SecurityConfig
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                     // Публичные эндпоинты
-                    .requestMatchers("/", "/index.html", "/static/**").permitAll()
+                    .requestMatchers("/", "/index.html", "/style.css", "/script.js").permitAll()
                     .requestMatchers("/auth/login", "/auth/register").permitAll()
                     .requestMatchers("/photos/image/**").permitAll()
                     .requestMatchers("/photos/{id}/view").permitAll()
