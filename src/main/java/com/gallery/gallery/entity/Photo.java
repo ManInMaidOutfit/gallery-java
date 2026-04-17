@@ -12,16 +12,16 @@ public class Photo
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "Title")
+    @Column(name = "Title", columnDefinition = "TEXT")
     private String title;
 
-    @Column(name = "Description")
+    @Column(name = "Description", columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "\"FilePath\"")
+    @Column(name = "\"FilePath\"", columnDefinition = "TEXT")
     private String filePath;
     
-    @Column(name = "\"FileName\"")
+    @Column(name = "\"FileName\"", columnDefinition = "TEXT")
     private String fileName;
     
     @Column(name = "\"FileSize\"")
