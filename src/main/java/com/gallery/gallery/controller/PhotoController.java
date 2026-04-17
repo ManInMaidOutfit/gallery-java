@@ -36,12 +36,23 @@ public class PhotoController
 
     // ВРЕМЕННЫЙ ПРОСТОЙ ЭНДПОИНТ - ТОЛЬКО ВСЕ ФОТО
     @GetMapping
-    public Page<Photo> getAllPhotos(
+public ResponseEntity<Page<Photo>> getAllPhotos(
+        @RequestParam(required = false) String search,
         @PageableDefault(size = 20, sort = "uploadDate", direction = Sort.Direction.DESC) Pageable pageable)
-    {
-        // Временно возвращаем все фото без фильтров
-        return photoRepository.findAll(pageable);
+{
+    try {
+        Page<Photo> photos;
+        if (search != null && !search.isEmpty()) {
+            photos = photoRepository.findByTitleContainingIgnoreCase(search, pageable);
+        } else {
+            photos = photoRepository.findAll(pageable);
+        }
+        return ResponseEntity.ok(photos);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(500).build();
     }
+}
 
     // НОВЫЙ ПРОСТОЙ ЭНДПОИНТ ДЛЯ ФИЛЬТРАЦИИ ПО КАТЕГОРИИ
     @GetMapping("/by-category/{categoryId}")

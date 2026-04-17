@@ -29,4 +29,5 @@ public interface PhotoRepository extends JpaRepository<Photo, Integer>
     @Query("UPDATE Photo p SET p.categoryId = 1 WHERE p.categoryId = :categoryId")
     void movePhotosToDefaultCategory(@Param("categoryId") Integer categoryId);
     Page<Photo> findByCategoryId(Integer categoryId, Pageable pageable);
+    Page<Photo> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 }
