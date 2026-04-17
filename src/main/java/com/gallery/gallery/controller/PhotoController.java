@@ -73,37 +73,44 @@ public ResponseEntity<Page<Photo>> getPhotosByCategory(
 
     
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-public String updatePhoto(@PathVariable Integer id,
+public ResponseEntity<?> updatePhoto(@PathVariable Integer id,
         @RequestParam(value = "title", required = false) String title,
         @RequestParam(value = "description", required = false) String description,
         @RequestParam(value = "categoryId", required = false) Integer categoryId,
         @RequestParam(value = "isVisible", required = false) Boolean isVisible,
         @RequestParam(value = "file", required = false) MultipartFile file)
 {
-    Photo photo = photoRepository.findById(id).orElse(null);
-    if (photo == null)
-        return "Фото не найдено";
-
-    if(title != null) photo.setTitle(title);
-    if (description != null) photo.setDescription(description);
-    if (categoryId != null) photo.setCategoryId(categoryId);
-    if (isVisible != null) photo.setIsVisible(isVisible);
-
-    if(file != null && !file.isEmpty()) {
-        try {
-            // Загружаем новый файл в ImgBB
-            String imageUrl = imgbbService.uploadImage(file);
-            photo.setFilePath(imageUrl);  // Обновляем URL
-            photo.setFileName(file.getOriginalFilename());
-            photo.setFileSize((int) file.getSize());
-            photo.setUploadDate(java.time.LocalDate.now());
-        } catch(Exception e) {
-            return "Ошибка загрузки: " + e.getMessage();
+    try {
+        Photo photo = photoRepository.findById(id).orElse(null);
+        if (photo == null) {
+            return ResponseEntity.status(404).body("Фото не найдено");
         }
-    }
 
-    photoRepository.save(photo);
-    return "Фото обновлено! ID: " + photo.getId();           
+        if (title != null) photo.setTitle(title);
+        if (description != null) photo.setDescription(description);
+        if (categoryId != null) photo.setCategoryId(categoryId);
+        if (isVisible != null) photo.setIsVisible(isVisible);
+
+        if (file != null && !file.isEmpty()) {
+            try {
+                // Загружаем новый файл в ImgBB
+                String imageUrl = imgbbService.uploadImage(file);
+                photo.setFilePath(imageUrl);
+                photo.setFileName(file.getOriginalFilename());
+                photo.setFileSize((int) file.getSize());
+                photo.setUploadDate(java.time.LocalDate.now());
+            } catch(Exception e) {
+                return ResponseEntity.status(500).body("Ошибка загрузки файла: " + e.getMessage());
+            }
+        }
+
+        photoRepository.save(photo);
+        return ResponseEntity.ok("Фото обновлено! ID: " + photo.getId());
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(500).body("Ошибка: " + e.getMessage());
+    }
 }
 
     @DeleteMapping("/{id}")
