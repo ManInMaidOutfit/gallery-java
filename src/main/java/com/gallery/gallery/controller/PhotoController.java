@@ -69,72 +69,38 @@ public class PhotoController
 
     
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String updatePhoto(@PathVariable Integer id,
+public String updatePhoto(@PathVariable Integer id,
         @RequestParam(value = "title", required = false) String title,
         @RequestParam(value = "description", required = false) String description,
         @RequestParam(value = "categoryId", required = false) Integer categoryId,
         @RequestParam(value = "isVisible", required = false) Boolean isVisible,
         @RequestParam(value = "file", required = false) MultipartFile file)
-    {
-        Photo photo = photoRepository.findById(id).orElse(null);
-        if (photo == null)
-            return "Фото не найдено";
+{
+    Photo photo = photoRepository.findById(id).orElse(null);
+    if (photo == null)
+        return "Фото не найдено";
 
-        if(title != null)
-            photo.setTitle(title);
+    if(title != null) photo.setTitle(title);
+    if (description != null) photo.setDescription(description);
+    if (categoryId != null) photo.setCategoryId(categoryId);
+    if (isVisible != null) photo.setIsVisible(isVisible);
 
-        if (description != null)
-            photo.setDescription(description);
-    
-        if (categoryId != null)
-            photo.setCategoryId(categoryId);
-    
-        if (isVisible != null)
-            photo.setIsVisible(isVisible);
-
-        if(file != null && !file.isEmpty())
-        {
-            
-            try
-            {
-                Path oldPath = Paths.get(photo.getFilePath());
-                if (Files.exists(oldPath)) 
-                {
-                    try 
-                    {
-                        Files.delete(oldPath);
-                    } catch (IOException e) 
-                    {
-                        System.err.println("Не удалось удалить старый файл: " + e.getMessage());
-                    }
-                }
-                String uploadDir = "uploads/";
-                Path uploadPath = Paths.get(uploadDir);
-                if(!Files.exists(uploadPath))
-                {
-                    Files.createDirectories(uploadPath);
-                }
-
-                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                Path filePath = uploadPath.resolve(fileName);
-
-                Files.copy(file.getInputStream(), filePath);
-                photo.setFilePath(filePath.toString());
-                photo.setFileName(fileName);
-                photo.setFileSize((int) file.getSize());
-                photo.setUploadDate(java.time.LocalDate.now());
-
-            }
-            catch(IOException e)
-            {
-                return "Ошибка загрузки: " + e.getMessage();
-            }
+    if(file != null && !file.isEmpty()) {
+        try {
+            // Загружаем новый файл в ImgBB
+            String imageUrl = imgbbService.uploadImage(file);
+            photo.setFilePath(imageUrl);  // Обновляем URL
+            photo.setFileName(file.getOriginalFilename());
+            photo.setFileSize((int) file.getSize());
+            photo.setUploadDate(java.time.LocalDate.now());
+        } catch(Exception e) {
+            return "Ошибка загрузки: " + e.getMessage();
         }
-
-        photoRepository.save(photo);
-        return "Фото обновлено! ID: " + photo.getId();           
-
     }
+
+    photoRepository.save(photo);
+    return "Фото обновлено! ID: " + photo.getId();           
+}
 
     @DeleteMapping("/{id}")
     public void deletePhoto(@PathVariable Integer id)
