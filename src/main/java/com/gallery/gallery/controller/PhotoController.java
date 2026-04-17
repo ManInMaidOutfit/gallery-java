@@ -41,6 +41,12 @@ public class PhotoController
     return photoRepository.findAll(pageable);
     }
 
+    @GetMapping("/")
+    public String redirectToIndex() 
+    {
+        return "forward:/index.html";
+    }
+
     @GetMapping("/{id}")
     public Photo getPhotoById(@PathVariable Integer id)
     {

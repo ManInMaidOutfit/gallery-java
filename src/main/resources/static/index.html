@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery | Фото галерея</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <header>
+            <h1>GALLERY</h1>
+            <div class="auth-section">
+                <div class="login-form" id="loginForm">
+                    <input type="text" id="username" placeholder="Login">
+                    <input type="password" id="password" placeholder="Password">
+                    <button id="loginBtn">Login as Admin</button>
+                </div>
+                <div class="admin-panel" id="adminPanel" style="display: none;">
+                    <span id="adminStatus" class="status">Admin</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Форма загрузки фото (только админ) -->
+        <div class="upload-section" id="uploadSection" style="display: none;">
+            <h3>Upload New Photo</h3>
+            <form id="uploadForm">
+                <input type="text" id="photoTitle" placeholder="Title" required>
+                <input type="text" id="photoDesc" placeholder="Description">
+                <select id="categorySelect"></select>
+                
+                <!-- Кастомный input для файла -->
+                <div class="file-wrapper">
+                    <label for="photoFile" class="file-label">Выберите файл</label>
+                    <input type="file" id="photoFile" accept="image/*" required style="display: none;">
+                    <span id="fileName" class="file-name">Файл не выбран</span>
+                </div>
+                
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+
+        <!-- Фильтры и поиск -->
+        <div class="filters">
+            <input type="text" id="searchInput" placeholder="Search by title...">
+            <select id="categoryFilter">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+
+        <!-- Галерея -->
+        <div class="gallery" id="gallery"></div>
+
+        <!-- Пагинация -->
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Слайдер (модальное окно) -->
+    <div id="sliderModal" class="slider-modal">
+        <span class="close-slider">&times;</span>
+        <div class="slider-container">
+            <button class="slider-prev">❮</button>
+            <img id="sliderImage" class="slider-image" alt="">
+            <button class="slider-next">❯</button>
+        </div>
+        <div class="slider-caption" id="sliderCaption"></div>
+    </div>
+
+    <!-- Модальное окно для описания -->
+    <div id="descModal" class="desc-modal">
+        <div class="desc-modal-content">
+            <span class="close-desc-modal">&times;</span>
+            <h3 id="descModalTitle"></h3>
+            <p id="descModalText"></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
