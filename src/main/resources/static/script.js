@@ -64,6 +64,21 @@ async function loadCategories() {
     }
 }
 
+// Получение названия категории по ID
+async function getCategoryTitle(categoryId) {
+    if (!categoryId) return 'Без категории';
+    try {
+        const response = await fetch(`${API_BASE}/categories/${categoryId}`);
+        if (response.ok) {
+            const category = await response.json();
+            return category.title;
+        }
+        return 'Без категории';
+    } catch (error) {
+        return 'Без категории';
+    }
+}
+
 // ========== ЗАГРУЗКА ФОТО (СЕРВЕРНАЯ ПАГИНАЦИЯ) ==========
 
 async function loadPhotos() {
@@ -81,8 +96,13 @@ async function loadPhotos() {
         const photos = data.content || [];
         const totalPages = data.totalPages || 0;
         
-        // Если пользователь не админ — фильтруем только по видимости (сервер уже отдаёт все фото)
-        // Но сервер не знает, кто админ, поэтому фильтруем на клиенте
+        // Загружаем названия категорий для каждого фото
+        for (const photo of photos) {
+            if (photo.categoryId && !photo.categoryTitle) {
+                photo.categoryTitle = await getCategoryTitle(photo.categoryId);
+            }
+        }
+        
         let filteredPhotos = photos;
         if (!token) {
             filteredPhotos = photos.filter(photo => photo.isVisible === true);
@@ -90,8 +110,6 @@ async function loadPhotos() {
         
         currentPhotos = filteredPhotos;
         renderGallery(currentPhotos);
-        
-        // Для пагинации используем общее количество страниц от сервера
         renderPagination(totalPages, data.totalElements);
         
     } catch (error) {
@@ -140,20 +158,6 @@ function renderPagination(totalPages, totalElements) {
 }
 
 // ========== ОТОБРАЖЕНИЕ ГАЛЕРЕИ ==========
-
-async function getCategoryTitle(categoryId) {
-    if (!categoryId) return 'Без категории';
-    try {
-        const response = await fetch(`${API_BASE}/categories/${categoryId}`);
-        if (response.ok) {
-            const category = await response.json();
-            return category.title;
-        }
-        return 'Без категории';
-    } catch (error) {
-        return 'Без категории';
-    }
-}
 
 function renderGallery(photos) {
     const gallery = document.getElementById("gallery");
