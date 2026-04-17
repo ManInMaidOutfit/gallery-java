@@ -6,10 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -23,32 +22,38 @@ public class ImgbbService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String uploadImage(MultipartFile file) throws Exception {
-        // Конвертируем файл в base64
+        // 1. Конвертируем файл в base64
         byte[] fileBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(fileBytes);
         
-        // URL encode the base64 string
+        // 2. URL-кодируем base64 строку
         String encodedImage = URLEncoder.encode(base64Image, StandardCharsets.UTF_8.toString());
         
-        // Формируем запрос
-        String url = "https://api.imgbb.com/1/upload?key=" + apiKey;
+        // 3. Формируем POST данные
+        String postData = "key=" + apiKey + "&image=" + encodedImage;
         
-        // Вариант 1: Отправляем как form data
-        String body = "image=" + encodedImage;
+        // 4. Отправляем запрос
+        URL url = new URL("https://api.imgbb.com/1/upload");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setDoOutput(true);
         
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(postData.getBytes(StandardCharsets.UTF_8));
+            os.flush();
+        }
         
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        // 5. Читаем ответ
+        int responseCode = conn.getResponseCode();
+        java.io.InputStream inputStream = (responseCode < 400) ? conn.getInputStream() : conn.getErrorStream();
+        String responseBody = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         
-        System.out.println("ImgBB Response: " + response.body());
+        System.out.println("ImgBB Response Code: " + responseCode);
+        System.out.println("ImgBB Response Body: " + responseBody);
         
-        // Парсим JSON ответ
-        JsonNode json = objectMapper.readTree(response.body());
+        // 6. Парсим JSON
+        JsonNode json = objectMapper.readTree(responseBody);
         
         if (json.has("data") && json.get("data").has("url")) {
             return json.get("data").get("url").asText();
@@ -56,7 +61,7 @@ public class ImgbbService {
             String errorMsg = json.get("error").get("message").asText();
             throw new Exception("ImgBB error: " + errorMsg);
         } else {
-            throw new Exception("Upload failed: " + response.body());
+            throw new Exception("Upload failed: " + responseBody);
         }
     }
 }
