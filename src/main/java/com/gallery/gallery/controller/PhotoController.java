@@ -2,6 +2,7 @@ package com.gallery.gallery.controller;
 
 import com.gallery.gallery.entity.Photo;
 import com.gallery.gallery.repository.PhotoRepository;
+import com.gallery.gallery.service.ImgbbService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableDefault;
@@ -26,6 +27,10 @@ public class PhotoController
 {
     @Autowired
     private PhotoRepository photoRepository;
+
+    @Autowired
+    private ImgbbService imgbbService;
+
 
 
     @GetMapping
@@ -135,65 +140,45 @@ public class PhotoController
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String uploadPhoto(@RequestParam("file") MultipartFile file, @RequestParam("title") String title, @RequestParam(value = "description", required = false) String description, @RequestParam(value = "categoryId", required = false) Integer categoryId, @RequestParam(value = "isVisible", defaultValue = "true") Boolean isVisible)
+    public String uploadPhoto(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "isVisible", defaultValue = "true") Boolean isVisible)
     {
-        try
-        {
-            String uploadDir = "uploads/";
-            Path uploadPath = Paths.get(uploadDir);
-            if(!Files.exists(uploadPath))
-            {
-                Files.createDirectories(uploadPath);
-            }
-
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path filePath = uploadPath.resolve(fileName);
-
-            Files.copy(file.getInputStream(), filePath);
-
+        try {
+            // Загружаем фото в ImgBB
+            String imageUrl = imgbbService.uploadImage(file);
+            
             Photo photo = new Photo();
             photo.setTitle(title);
             photo.setDescription(description);
-            photo.setFilePath(filePath.toString());
-            photo.setFileName(fileName);
+            photo.setFilePath(imageUrl);  // ← теперь это URL из ImgBB
+            photo.setFileName(file.getOriginalFilename());
             photo.setFileSize((int) file.getSize());
             photo.setUploadDate(java.time.LocalDate.now());
             photo.setIsVisible(isVisible);
             photo.setCategoryId(categoryId);
             photo.setViews(0);
             photoRepository.save(photo);
-
-            return "Фото загружено! ID: " + photo.getId();
-        }
-        catch(IOException e)
-        {
+            
+            return "Фото загружено! ID: " + photo.getId() + "\nURL: " + imageUrl;
+        } catch (Exception e) {
             return "Ошибка загрузки: " + e.getMessage();
         }
     }
 
     @GetMapping("/image/{id}")
-public ResponseEntity<byte[]> getPhotoImage(@PathVariable Integer id) {
-    try {
+    public ResponseEntity<String> getPhotoImageUrl(@PathVariable Integer id) 
+    {
         Photo photo = photoRepository.findById(id).orElse(null);
-        if (photo == null) {
+        if (photo == null) 
+        {
             return ResponseEntity.notFound().build();
         }
-        
-        Path imagePath = Paths.get(photo.getFilePath());
-        if (!Files.exists(imagePath)) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        byte[] imageBytes = Files.readAllBytes(imagePath);
-        String contentType = Files.probeContentType(imagePath);
-        
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(imageBytes);
-    } catch (Exception e) {
-        return ResponseEntity.internalServerError().build();
+        return ResponseEntity.ok(photo.getFilePath());
     }
-}
 
 @PostMapping("/{id}/view")
 public ResponseEntity<?> incrementViews(@PathVariable Integer id) {
