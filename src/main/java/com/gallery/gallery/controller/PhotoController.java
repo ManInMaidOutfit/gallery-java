@@ -15,10 +15,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+
+import java.util.Map;
 
 
 @RestController
@@ -189,6 +192,21 @@ public ResponseEntity<?> incrementViews(@PathVariable Integer id) {
     photo.setViews(photo.getViews() + 1);
     photoRepository.save(photo);
     return ResponseEntity.ok().build();
+}
+
+@GetMapping("/debug")
+public ResponseEntity<Map<String, Object>> debug() {
+    Map<String, Object> info = new HashMap<>();
+    try {
+        long count = photoRepository.count();
+        info.put("totalPhotos", count);
+        info.put("status", "OK");
+        return ResponseEntity.ok(info);
+    } catch (Exception e) {
+        info.put("status", "ERROR");
+        info.put("error", e.getMessage());
+        return ResponseEntity.status(500).body(info);
+    }
 }
 
 }
